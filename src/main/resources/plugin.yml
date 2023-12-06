@@ -1,0 +1,4 @@
+name: AntiESP
+version: '${project.version}'
+main: org.x00Hero.AntiESP.Main
+api-version: '1.18'
