@@ -11,7 +11,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 
-import static org.x00Hero.AntiESP.Events.VisionDetection.CanSee;
+import static org.x00Hero.AntiESP.Main.Debug;
+import static org.x00Hero.AntiESP.VisionDetection.CanSee;
 import static org.x00Hero.AntiESP.PlayerFunctions.*;
 
 public class PlayerMove implements Listener {
@@ -29,18 +30,19 @@ public class PlayerMove implements Listener {
     public void onMove(PlayerMoveEvent e) {
         long start = System.currentTimeMillis();
         Player hider = e.getPlayer();
-        if(excludedFromCheck.contains(hider.getUniqueId())) return;
-        if(!isInitialized(hider)) InitializeToList(hider);
-        Location location1 = hider.getLocation();
-        for(Player player : Bukkit.getOnlinePlayers()) {
-            Location location2 = player.getLocation();
-            if(hider == player) continue;
-            if(player.getWorld() != hider.getWorld()) hidePlayer(player, hider, "!= World");
-            else if(location2.distance(location1) > Bukkit.getViewDistance() * 16) hidePlayer(player, hider, "View-Distance");
-            else if(!CanSee(hider, player)) hidePlayer(player, hider, "Vision Obscured");
-            else if(isHidden(player, hider)) showPlayer(player, hider);
+        if (excludedFromCheck.contains(hider.getUniqueId())) return;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (hider == player) continue;
+            visibilityCheck(hider, player);
+            visibilityCheck(player, hider);
         }
         long completed = System.currentTimeMillis();
-        //Bukkit.getLogger().info("Took " + (completed - start) + "ms to complete.");
+        Debug("Took " + (completed - start) + "ms to complete.");
+    }
+    private void visibilityCheck(Player viewer, Player target) {
+        if (!isInitialized(viewer)) InitializeToList(viewer);
+        String reason = CanSee(viewer, target);
+        if (reason != null) hidePlayer(target, viewer, reason);
+        else if (isHidden(target, viewer)) showPlayer(target, viewer);
     }
 }

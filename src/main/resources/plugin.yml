@@ -2,3 +2,7 @@ name: AntiESP
 version: '${project.version}'
 main: org.x00Hero.AntiESP.Main
 api-version: '1.18'
+commands:
+  atp:
+    usage: "/{command} [reload/rl]"
+    permission: testing420

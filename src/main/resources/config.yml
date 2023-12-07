@@ -2,3 +2,4 @@ update-rate: -1 # -1 being on PlayerMovement
 vision-rage: -1 # -1 being server view-distance
 viewPoints: 4 # points equally plotted on players that you can view
 pointsVisible: 1 # points needed to be deemed "visible"
+debug: false
