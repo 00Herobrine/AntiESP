@@ -1,6 +1,5 @@
 package org.x00Hero.AntiESP.Events;
 
-import org.bukkit.Location;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,7 +41,7 @@ public class PlayerMove implements Listener {
     private void visibilityCheck(Player viewer, Player target) {
         if (!isInitialized(viewer)) InitializeToList(viewer);
         String reason = CanSee(viewer, target);
-        if (reason != null) hidePlayer(target, viewer, reason);
-        else if (isHidden(target, viewer)) showPlayer(target, viewer);
+        if (reason != null && !isHidden(target, viewer)) hidePlayer(target, viewer, reason);
+        else if (reason == null && isHidden(target, viewer)) showPlayer(target, viewer);
     }
 }

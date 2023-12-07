@@ -12,8 +12,9 @@ import static org.x00Hero.AntiESP.Main.plugin;
 
 public class VisionDetection {
     public static String CanSee(Player viewer, Player viewing) {
+        int distance = Bukkit.spigot().getConfig().getInt("world-settings.default.entity-tracking-range.players");
         if(viewer.getWorld() != viewing.getWorld()) return "Different Worlds";
-        else if(viewer.getLocation().distance(viewing.getLocation()) > Bukkit.getViewDistance() * 16) return "View-Distance";
+        else if(viewer.getLocation().distance(viewing.getLocation()) > distance) return "View-Distance";
         Location location = viewer.getEyeLocation();
         Location[] viewPoints = getEquallySpacedPoints(viewing.getLocation(), viewing.getEyeLocation(), plugin.getConfig().getInt("viewPoints"));
         int pointsVisible = 0;
@@ -37,7 +38,7 @@ public class VisionDetection {
         return result;
     }
     public static boolean visionOccluded(Location location, Location location2) {
-        Debug("Occlusion Check " + location + " | " + location2);
+        //Debug("Occlusion Check " + location + " | " + location2);
         double distance = location.distance(location2);
         Vector direction = location2.toVector().subtract(location.toVector()).normalize();
         double occlusionStep = 0.5;
@@ -45,9 +46,9 @@ public class VisionDetection {
         for(double d = 0; d < distance; d += occlusionStep) {
             Location checkLocation = location.clone().add(direction.clone().multiply(d));
             Block block = checkLocation.getBlock();
-            if(!canSeeThroughBlock(block)) { Debug("Occluded @ " + checkLocation); return true; } // Bukkit.getLogger().info("Occluded @ " + checkLocation);
+            if(!canSeeThroughBlock(block)) { /*Debug("Occluded @ " + checkLocation);*/ return true; } // Bukkit.getLogger().info("Occluded @ " + checkLocation);
         }
-        Debug("Visible @ " + location2);
+        //Debug("Visible @ " + location2);
         return false;
     }
     private static boolean canSeeThroughBlock(Block block) {
