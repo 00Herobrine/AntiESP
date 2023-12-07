@@ -1,13 +1,15 @@
 package org.x00Hero.AntiESP;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 import org.x00Hero.AntiESP.Events.CommandManager;
 import org.x00Hero.AntiESP.Events.PlayerMove;
 
-public final class Main extends JavaPlugin {
+import static org.x00Hero.AntiESP.VisionDetection.visibilityCheck;
 
+public final class Main extends JavaPlugin {
     public static Main plugin;
 
     @Override
@@ -17,19 +19,28 @@ public final class Main extends JavaPlugin {
         saveConfig();
         RegisterEvents();
         RegisterCommands();
+        Config.Load();
+        VisionCheck();
     }
 
     public static void Debug(String... message) {
-        if(!plugin.getConfig().getBoolean("debug")) return;
+        if(!Config.debug) return;
         for(String msg : message) Bukkit.getLogger().info(msg);
     }
-    private void RegisterEvents() {
-        Bukkit.getPluginManager().registerEvents(new PlayerMove(), plugin);
-    }
+    private void RegisterEvents() { Bukkit.getPluginManager().registerEvents(new PlayerMove(), plugin); }
     public void RegisterCommands() { getCommand("atp").setExecutor(new CommandManager()); }
 
-    private BukkitTask runTask(Runnable runnable, boolean isAsync) {
-        if(isAsync) return Bukkit.getScheduler().runTaskAsynchronously(this, runnable);
-        return Bukkit.getScheduler().runTask(this, runnable);
+    public static int visionTaskID;
+    public static void VisionCheck() {
+        if(Config.updateRate == -1) return;
+        visionTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+            long start = System.currentTimeMillis();
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                for(Entity entity : player.getNearbyEntities(Config.viewDistance, Config.viewDistance, Config.viewDistance)) if(entity instanceof Player near)
+                visibilityCheck(player, near);
+            }
+            long finish = System.currentTimeMillis();
+            Debug("Took " + (finish - start) + "ms to complete");
+        },1, Math.abs(Config.updateRate));
     }
 }

@@ -7,21 +7,27 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.x00Hero.AntiESP.Main.Debug;
-import static org.x00Hero.AntiESP.Main.plugin;
+import static org.x00Hero.AntiESP.PlayerFunctions.*;
+import static org.x00Hero.AntiESP.PlayerFunctions.showPlayer;
 
 public class VisionDetection {
     public static String CanSee(Player viewer, Player viewing) {
-        int distance = Bukkit.spigot().getConfig().getInt("world-settings.default.entity-tracking-range.players");
         if(viewer.getWorld() != viewing.getWorld()) return "Different Worlds";
-        else if(viewer.getLocation().distance(viewing.getLocation()) > distance) return "View-Distance";
+        else if(viewer.getLocation().distance(viewing.getLocation()) > Config.viewDistance) return "View-Distance";
         Location location = viewer.getEyeLocation();
-        Location[] viewPoints = getEquallySpacedPoints(viewing.getLocation(), viewing.getEyeLocation(), plugin.getConfig().getInt("viewPoints"));
+        Location[] viewPoints = getEquallySpacedPoints(viewing.getLocation(), viewing.getEyeLocation(), Config.viewPoints);
         int pointsVisible = 0;
-        for(Location viewPoint : viewPoints)
-            if(!visionOccluded(location, viewPoint)) pointsVisible++;
-        int requiredPointsVisible = plugin.getConfig().getInt("pointsVisible");
-        return pointsVisible >= requiredPointsVisible ? null : "pointsVisible: " + pointsVisible + "/" + requiredPointsVisible;
+        List<String> occlusions = new ArrayList<>();
+        for(Location viewPoint : viewPoints) {
+            String result = visionOccluded(location, viewPoint);
+            if(result == null) pointsVisible++;
+            else occlusions.add(result);
+        }
+        return pointsVisible >= Config.pointsVisible ? null : "pointsVisible: " + pointsVisible + "/" + Config.pointsVisible;
     }
     public static Location[] getEquallySpacedPoints(Location startLocation, Location endLocation, int numPoints) {
         World world = startLocation.getWorld();
@@ -37,21 +43,25 @@ public class VisionDetection {
         }
         return result;
     }
-    public static boolean visionOccluded(Location location, Location location2) {
+    public static void visibilityCheck(Player viewer, Player target) {
+        if (!isInitialized(viewer)) InitializeToList(viewer);
+        String reason = CanSee(viewer, target);
+        if (reason != null && !isHidden(target, viewer)) hidePlayer(target, viewer, reason);
+        else if (reason == null && isHidden(target, viewer)) showPlayer(target, viewer);
+    }
+    public static String visionOccluded(Location location, Location location2) {
         //Debug("Occlusion Check " + location + " | " + location2);
         double distance = location.distance(location2);
         Vector direction = location2.toVector().subtract(location.toVector()).normalize();
-        double occlusionStep = 0.5;
-        if(location.getDirection().dot(direction) < 0) return true;
-        for(double d = 0; d < distance; d += occlusionStep) {
+        double dot = location.getDirection().dot(direction);
+        if(dot < Config.dotThreshold) return "Dot Threshold";
+        for(double d = 0; d < distance; d += Config.occlusionStep) {
             Location checkLocation = location.clone().add(direction.clone().multiply(d));
             Block block = checkLocation.getBlock();
-            if(!canSeeThroughBlock(block)) { /*Debug("Occluded @ " + checkLocation);*/ return true; } // Bukkit.getLogger().info("Occluded @ " + checkLocation);
+            if(!canSeeThroughBlock(block)) { /*Debug("Occluded @ " + checkLocation);*/ return block.getType() + " is occluding." ; } // Bukkit.getLogger().info("Occluded @ " + checkLocation);
         }
         //Debug("Visible @ " + location2);
-        return false;
+        return null;
     }
-    private static boolean canSeeThroughBlock(Block block) {
-        return !block.getType().isOccluding();
-    }
+    private static boolean canSeeThroughBlock(Block block) { return !block.getType().isOccluding(); }
 }

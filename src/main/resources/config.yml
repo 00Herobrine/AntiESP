@@ -1,5 +1,8 @@
-update-rate: -1 # -1 being on PlayerMovement
+update-rate: -1 # -1 = PlayerMovement, X = UpdateTicks, -X = Both (X being a number)
 vision-rage: -1 # -1 being server view-distance
-viewPoints: 4 # points equally plotted on players that you can view
-pointsVisible: 1 # points needed to be deemed "visible"
+view-points: 4 # points equally plotted on players that you can view
+visible-points: 1 # points needed to be deemed "visible"
+dot-threshold: 0 # idk it's negative if you're looking away just leave it alone ig
+occlusion-step: 0.5
+asyncCheck: true
 debug: false

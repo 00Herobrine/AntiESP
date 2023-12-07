@@ -7,29 +7,25 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.x00Hero.AntiESP.Config;
 
 import java.util.*;
 
 import static org.x00Hero.AntiESP.Main.Debug;
-import static org.x00Hero.AntiESP.VisionDetection.CanSee;
 import static org.x00Hero.AntiESP.PlayerFunctions.*;
+import static org.x00Hero.AntiESP.VisionDetection.visibilityCheck;
 
 public class PlayerMove implements Listener {
     public ArrayList<UUID> excludedFromCheck = new ArrayList<>();
     @EventHandler
-    public void onJoin(PlayerJoinEvent e) {
-        InitializeToList(e.getPlayer());
-    }
+    public void onJoin(PlayerJoinEvent e) { InitializeToList(e.getPlayer()); }
     @EventHandler
-    public void onQuit(PlayerQuitEvent e) {
-        removeFromList(e.getPlayer());
-    }
-
+    public void onQuit(PlayerQuitEvent e) { removeFromList(e.getPlayer()); }
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
         long start = System.currentTimeMillis();
         Player hider = e.getPlayer();
-        if (excludedFromCheck.contains(hider.getUniqueId())) return;
+        if (excludedFromCheck.contains(hider.getUniqueId()) || Config.updateRate > 0) return;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (hider == player) continue;
             visibilityCheck(hider, player);
@@ -37,11 +33,5 @@ public class PlayerMove implements Listener {
         }
         long completed = System.currentTimeMillis();
         Debug("Took " + (completed - start) + "ms to complete.");
-    }
-    private void visibilityCheck(Player viewer, Player target) {
-        if (!isInitialized(viewer)) InitializeToList(viewer);
-        String reason = CanSee(viewer, target);
-        if (reason != null && !isHidden(target, viewer)) hidePlayer(target, viewer, reason);
-        else if (reason == null && isHidden(target, viewer)) showPlayer(target, viewer);
     }
 }
